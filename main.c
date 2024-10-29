@@ -28,7 +28,8 @@ typedef struct Queue{               //队列结构体（存储队列的头和尾
 
 void push(Stack* Stack,car info,int* top){          //将元素压入栈中
     Stack[*top].data=info;
-    *top++;
+    (*top)++;
+    return;
 }
 
 int isEmptyStack(int top){          //检查栈是否为空
@@ -36,8 +37,8 @@ int isEmptyStack(int top){          //检查栈是否为空
 }
 
 car pop(Stack* Stack,int* top){         //将栈顶元素弹出
-    car popinfo=Stack[*top].data;
-    *top--;
+    car popinfo=Stack[(*top)-1].data;
+    (*top)--;
     return popinfo;
 }
 int seekStackCarNumber(Stack* Stack,int top,int seek){          //寻找栈中是否有符合车牌号的车
@@ -69,7 +70,7 @@ void enQueue(Queue* Queue,car info,int* location){          //进入队列
     }
     NewNode->data=info;         //将数据填入
     NewNode->next=NULL;
-    *location++;            //location记录队列中有几个元素
+    (*location)++;            //location记录队列中有几个元素
     if(Queue->head==NULL){          //若队列为空则初始化头、尾指针
         Queue->head=NewNode;
         Queue->tail=NewNode->next;
@@ -78,6 +79,7 @@ void enQueue(Queue* Queue,car info,int* location){          //进入队列
         Queue->tail=NewNode;            //队列不为空的情况
         Queue->tail=Queue->tail->next;
     }
+    return;
 }
 
 int isEmptyQueue(Queue* Queue){         //检查是否为空队列
@@ -89,7 +91,7 @@ car deQueue(Queue* Queue,int* location){            //出队操作，返回出�
     car data=temp->data;            //保存要出队的元素
     Queue->head=Queue->head->next;
     free(temp);
-    *location--;
+    (*location)--;
     return data;
 }
 
@@ -131,11 +133,11 @@ int main(void){
         if(next.behavior=='A'){            //有车驶入，判断去向
             if(LotTop<2){           //进入停车场
                 push(ParkingLot,next,&LotTop);
-                printf("汽车在停车场第%d个位置",LotTop);
+                printf("汽车在停车场第%d个位置\n",LotTop);
             }
             else{           //进入便道
                 enQueue(&TemporaryRoad,next,&location);
-                printf("汽车在便道第%d个位置",location);
+                printf("汽车在便道第%d个位置\n",location);
             }
         }
         else if(next.behavior=='D'){          //有车驶出
@@ -143,18 +145,18 @@ int main(void){
             if(temp=seekStackCarNumber(ParkingLot,LotTop,next.number)){            //若驶出车原本在停车场内
                 if(temp==LotTop){           //若为能直接驶出的栈顶车
                     car former=pop(ParkingLot,&LotTop);
-                    printf("%d车在停车场停留%d分钟，应交纳%d元",next.time-former.time,(next.time-former.time)/PERPERIOD*PERPRIZE);
+                    printf("%d车停留%d分钟，应交纳%d元\n",former.number,next.time-former.time,((next.time-former.time)/PERPERIOD+1)*PERPRIZE);
                 }
                 else{           //若为不能直接驶出的栈内车
-                    while(ParkingLot[LotTop].data.number!=next.number){         //将栈中在目标车上的车全部出栈
+                    while(ParkingLot[LotTop-1].data.number!=next.number){         //将栈中在目标车上的车全部出栈
                         push(GiveWay,pop(ParkingLot,&LotTop),&WayTop);          //出栈的车到临时的栈中
                     }
                     car out=pop(ParkingLot,&LotTop);            //将目标车出栈并记录其信息（要用车牌号和时刻）
 
                     //输出该车停留时间和收费情况
-                    printf("%d车停留%d分钟，应缴纳%d元",out.number,next.time-out.time,(next.time-out.time)/PERPERIOD*PERPRIZE);
+                    printf("%d车停留%d分钟，应缴纳%d元\n",out.number,next.time-out.time,((next.time-out.time)/PERPERIOD+1)*PERPRIZE);
                     
-                    while(isEmptyStack(WayTop)){            //将临时出栈的车重新压入停车场栈中
+                    while(!isEmptyStack(WayTop)){            //将临时出栈的车重新压入停车场栈中
                         push(ParkingLot,pop(GiveWay,&WayTop),&LotTop);
                     }
                     if(location!=0){            //检查便道中是否有车
@@ -165,19 +167,20 @@ int main(void){
             else if(temp=seekQueueCarNumber(&TemporaryRoad,next.number)){           //若驶出车原本在便道内
                 if(temp==1){            //若该车在队列的头位置
                     deQueue(&TemporaryRoad,&location);            //出队
-                    printf("%d车在停车场停留0分钟，应交纳0元",next.number);
+                    printf("%d车在停车场内停留0分钟，应交纳0元\n",next.number);
                 }
                 else{
-                    printf("便道只有最前面的车可以离开，输入的信息不合逻辑");           //便道内的车无法驶出
+                    printf("便道只有最前面的车可以离开，输入的信息不合逻辑\n");           //便道内的车无法驶出
                 }
             }
             else{
-                printf("该车不在停车场或便道内");           //若要驶出的车既不在停车场内也不在便道内
+                printf("该车不在停车场或便道内\n");           //若要驶出的车既不在停车场内也不在便道内
             }
         }
         else if(next.behavior!='A' && next.behavior!='D'){
-            printf("输入的格式错误，汽车只有'A'和'D'两种行为");         //输入的车行为既不是驶出也不是驶入
+            printf("输入的格式错误，汽车只有'A'和'D'两种行为\n");         //输入的车行为既不是驶出也不是驶入
         }
+        getchar();
         scanf("%c %d %d",&next.behavior,&next.number,&next.time);         //输入下一辆车的信息
     }
 }
