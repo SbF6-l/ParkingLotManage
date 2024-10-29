@@ -119,9 +119,9 @@ int seekQueueCarNumber(Queue* Queue,int seek){          //查找队列中是否�
     return 0;
 }
 
-void clearQueue(Queue* Queue){          //清空队列
+void clearQueue(Queue* Queue,int* location){          //清空队列
     while(!isEmptyQueue(Queue)){
-        deQueue(Queue);
+        deQueue(Queue,location);
     }
 }
 
@@ -144,7 +144,7 @@ int main(void){
                 printf("汽车在停车场第%d个位置",LotTop);
             }
             else{           //进入便道
-                enQueue(TemporaryRoad,next);
+                enQueue(TemporaryRoad,next,&location);
                 printf("汽车在便道第%d个位置",);
             }
         }
@@ -152,16 +152,26 @@ int main(void){
             int temp=0;         //temp记录要驶出的车在停车场或是便道内的第几个位置
             if(temp=seekStackCarNumber(ParkingLot,LotTop,next->number)){            //若驶出车原本在停车场内
                 if(temp==LotTop){           //若为能直接驶出的栈顶车
-                    car former=pop(ParkingLot,LotTop);
+                    car former=pop(ParkingLot,&LotTop);
                     printf("%d车在停车场停留%d分钟，应交纳%d元",next->time-former->time,(next->time-former->time)/PERPERIOD*PERPRIZE);
                 }
                 else{           //若为不能直接驶出的栈内车
-
+                    while(ParkingLot[LotTop]->data->number!=next->number){
+                        push(GiveWay,pop(ParkingLot,&LotTop),*WayTop);
+                    }
+                    car out=pop(ParkingLot,&LotTop);
+                    printf("%d车停留%d分钟，应缴纳%d元",out->number,next->time-out->time,(next->time-out->time)/PERPERIOD*PERPRIZE);
+                    while(isEmptyStack(WayTop)){
+                        push(ParkingLot,pop(GiveWay,&WayTop),&LotTop);
+                    }
+                    if(location!=0){
+                        push(ParkingLot,deQueue(TemporaryRoad,&location),LotTop);
+                    }
                 }
             }
             else if(temp=seekQueueCarNumber(TemporaryRoad,next->number)){           //若驶出车原本在便道内
                 if(temp==1){            //若该车在队列的头位置
-                    deQueue(TemporaryRoad,location);            //出队
+                    deQueue(TemporaryRoad,&location);            //出队
                     printf("%d车在停车场停留0分钟，应交纳0元",next->number);
                 }
                 else{
@@ -171,9 +181,10 @@ int main(void){
             else{
                 printf("该车不在停车场或便道内");           //若要驶出的车既不在停车场内也不在便道内
             }
-        else{
+        elif(next->behavior!='A' && next->behavior!='D'){
             printf("输入的格式错误，汽车只有'A'和'D'两种行为");         //输入的车行为既不是驶出也不是驶入
         }
+        scanf("%c%d%d",&next->behavior,&next->number,&next->time);
         }
     }
     
